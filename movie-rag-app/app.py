@@ -14,17 +14,29 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 # Initialize the Groq API client
 client = Groq(api_key=GROQ_API_KEY)
 
+# Cache the loading of the dataset and embeddings
+@st.cache_resource
+def load_data():
+    return pd.read_csv("movie_dataset.csv")
+
+@st.cache_resource
+def load_embeddings():
+    return np.load("embeddings.npy")
+
 # Load the movie dataset
 # data = pd.read_csv("./movie_dataset.csv")
-data = pd.read_csv(os.path.join(os.path.dirname(__file__), "movie_dataset.csv"))
+# data = pd.read_csv(os.path.join(os.path.dirname(__file__), "movie_dataset.csv"))
 
+# Load data and embeddings using the cached functions
+data = load_data()
+embeddings = load_embeddings()
 
 # Initialize the Sentence Transformer model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Convert movie descriptions to embeddings
-embeddings = model.encode(data['overview'].fillna("").tolist())
-embeddings = np.array(embeddings).astype('float32')  # FAISS requires float32
+# # Convert movie descriptions to embeddings
+# embeddings = model.encode(data['overview'].fillna("").tolist())
+# embeddings = np.array(embeddings).astype('float32')  # FAISS requires float32
 
 # Create a FAISS index
 index = faiss.IndexFlatL2(embeddings.shape[1])  # L2 distance
