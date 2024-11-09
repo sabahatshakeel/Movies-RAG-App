@@ -20,9 +20,7 @@ def load_data():
         st.error("Movie dataset not found!")
         return None
     # data = pd.read_csv('./movie_dataset.csv')
-
-      data = pd.read_csv(os.path.join(os.path.dirname(__file__), "./movie_dataset.csv"))
-
+    data = pd.read_csv(os.path.join(os.path.dirname(__file__), "./movie_dataset.csv"))
     return data
 
 @st.cache_resource
