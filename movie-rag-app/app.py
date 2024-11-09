@@ -1,67 +1,68 @@
-import os
-import pandas as pd
-from dotenv import load_dotenv
-from groq import Groq
-from sentence_transformers import SentenceTransformer
-import faiss
-import numpy as np
 import streamlit as st
+import pandas as pd
+import numpy as np
+import faiss
+from sentence_transformers import SentenceTransformer
+import os
 
-# Load environment variables
-load_dotenv()
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-
-# Initialize the Groq API client
-client = Groq(api_key=GROQ_API_KEY)
-
-# Cache the loading of the embeddings
+# Streamlit caching for model and data
 @st.cache_resource
-def load_embeddings():
-    return np.load("embeddings.npy")
-
-# Streamlit UI setup
-st.title("Movie RAG Chatbot")
-st.write("Upload your movie dataset CSV file and enter a query about movies (e.g., 'funny movies').")
-
-# File uploader widget
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-
-if uploaded_file is not None:
-    # Load the dataset from the uploaded file
-    data = pd.read_csv("./movie_dataset.csv")
-    
-    # Cache the embeddings (you might want to load the embeddings here if they are also part of the upload or already exist)
-    embeddings = load_embeddings()
-
-    # Initialize the Sentence Transformer model
+def load_model():
+    # Load SentenceTransformer model
     model = SentenceTransformer("all-MiniLM-L6-v2")
+    return model
 
-    # Create a FAISS index if it's not cached
-    index = faiss.IndexFlatL2(embeddings.shape[1])
-    index.add(embeddings)
+@st.cache_data
+def load_data():
+    # Load the movie dataset (e.g., hosted on S3 or locally)
+    if not os.path.exists('./movie_dataset.csv'):
+        # Replace this with actual download if dataset is not local
+        st.error("Movie dataset not found!")
+        return None
+    data = pd.read_csv('./movie_dataset.csv')
+    return data
 
-    # Define the RAG function for movie query
-    def query_movie_rag(query):
-        # Encode the user query
-        query_emb = model.encode([query])[0].astype('float32')
+@st.cache_resource
+def get_faiss_index(data, model):
+    # Load or create FAISS index
+    embeddings = model.encode(data['overview'].fillna("").tolist())
+    embeddings = np.array(embeddings).astype('float32')  # FAISS requires float32
+    
+    # Create FAISS index (Using IndexIVFFlat for faster search)
+    index = faiss.IndexIVFFlat(embeddings.shape[1], 100)  # 100 is the number of clusters
+    if not index.is_trained:
+        index.train(embeddings)  # Train the index if not already trained
+    index.add(embeddings)  # Add embeddings to the index
+    return index, embeddings
 
-        # Search FAISS for top 5 matches
-        _, indices = index.search(np.array([query_emb]), k=5)
+# Main Streamlit app
+def main():
+    # Load model and data
+    model = load_model()
+    data = load_data()
+    
+    if data is None:
+        return  # Exit if data is not loaded properly
+    
+    # Create FAISS index
+    index, embeddings = get_faiss_index(data, model)
+    
+    # Streamlit UI
+    st.title("Movie Recommendation System")
+    query = st.text_input("Enter movie query:")
+    
+    if query:
+        # Convert query to embedding
+        query_embedding = model.encode([query]).astype('float32')
+        
+        # Perform FAISS search (search top 5 nearest neighbors)
+        D, I = index.search(query_embedding, 5)
+        
+        # Display results
+        st.write(f"Top 5 similar movies to '{query}':")
+        
+        for i in range(5):
+            st.write(f"{i+1}. {data.iloc[I[0][i]]['title']} - {data.iloc[I[0][i]]['overview']} (Score: {D[0][i]:.4f})")
 
-        # Compile the top 5 movies based on similarity
-        recommended_movies = [
-            f"{data['original_title'][i]}: {data['overview'][i]}"
-            for i in indices[0]
-        ]
-
-        # Format results for output
-        response = "\n\n".join([f"{idx+1}. {movie}" for idx, movie in enumerate(recommended_movies)])
-        return f"Top recommended movies based on your search:\n\n{response}"
-
-    # Text input for user query
-    user_query = st.text_input("Search for movies:", "")
-
-    # Display response when user submits a query
-    if user_query:
-        response = query_movie_rag(user_query)
-        st.write(response)
+if __name__ == "__main__":
+    main()
