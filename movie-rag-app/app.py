@@ -12,15 +12,24 @@ def load_model():
     model = SentenceTransformer("all-MiniLM-L6-v2")
     return model
 
+# @st.cache_data
+# def load_data():
+#     # Load the movie dataset (e.g., hosted on S3 or locally)
+#     if not os.path.exists('./movie_dataset.csv'):
+#         # Replace this with actual download if dataset is not local
+#         st.error("Movie dataset not found!")
+#         return None
+#     data = pd.read_csv('./movie_dataset.csv')
+#     # data = pd.read_csv(os.path.join(os.path.dirname(__file__), "./movie_dataset.csv"))
+#     return data
+
 @st.cache_data
 def load_data():
-    # Load the movie dataset (e.g., hosted on S3 or locally)
-    if not os.path.exists('./movie_dataset.csv'):
-        # Replace this with actual download if dataset is not local
-        st.error("Movie dataset not found!")
+    file_path = "./movie_dataset.csv"
+    if not os.path.exists(file_path):
+        st.error(f"Movie dataset not found at {./movie_dataset.csv}!")
         return None
-    data = pd.read_csv('./movie_dataset.csv')
-    # data = pd.read_csv(os.path.join(os.path.dirname(__file__), "./movie_dataset.csv"))
+    data = pd.read_csv("./movie_dataset.csv)
     return data
 
 @st.cache_resource
