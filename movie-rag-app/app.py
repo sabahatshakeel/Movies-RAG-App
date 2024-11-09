@@ -15,7 +15,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
 # Load the movie dataset
-data = pd.read_csv("/movie_dataset.csv")
+data = pd.read_csv("./movie_dataset.csv")
 
 # Initialize the Sentence Transformer model
 model = SentenceTransformer("all-MiniLM-L6-v2")
