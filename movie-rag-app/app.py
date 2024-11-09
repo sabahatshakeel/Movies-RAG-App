@@ -17,7 +17,7 @@ client = Groq(api_key=GROQ_API_KEY)
 # Cache the loading of the dataset and embeddings
 @st.cache_resource
 def load_data():
-    return pd.read_csv("movie_dataset.csv")
+    return pd.read_csv("./movie_dataset.csv")
 
 @st.cache_resource
 def load_embeddings():
