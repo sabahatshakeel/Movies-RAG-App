@@ -15,7 +15,7 @@ def load_model():
 @st.cache_data
 def load_data():
     # Load the movie dataset (e.g., hosted on S3 or locally)
-    if not os.path.exists('./movie_dataset.csv'):
+    if not os.path.exists('movie_dataset.csv'):
         # Replace this with actual download if dataset is not local
         st.error("Movie dataset not found!")
         return None
