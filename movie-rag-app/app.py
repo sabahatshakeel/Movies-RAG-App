@@ -29,7 +29,8 @@ def load_data():
     if not os.path.exists(file_path):
         st.error(f"Movie dataset not found at {movie_dataset.csv}!")
         return None
-    data = pd.read_csv("./movie_dataset.csv")
+    # data = pd.read_csv("./movie_dataset.csv")
+    data = pd.read_csv(os.path.join(os.path.dirname(__file__), "./movie_dataset.csv"))
     return data
 
 @st.cache_resource
