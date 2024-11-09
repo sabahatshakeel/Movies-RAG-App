@@ -27,7 +27,7 @@ def load_model():
 def load_data():
     file_path = "./movie_dataset.csv"
     if not os.path.exists(file_path):
-        st.error(f"Movie dataset not found at {./movie_dataset.csv}!")
+        st.error(f"Movie dataset not found at {"./movie_dataset.csv"}!")
         return None
     data = pd.read_csv("./movie_dataset.csv")
     return data
